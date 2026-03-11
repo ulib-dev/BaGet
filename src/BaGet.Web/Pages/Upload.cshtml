@@ -1,4 +1,4 @@
-﻿@page
+@page
 @inject IUrlGenerator _url
 
 @{
@@ -15,6 +15,24 @@
 
     <div>You can push packages using the service index <code>@serviceIndexUrl</code>.</div>
 
+    <h3>Web 上傳</h3>
+    <p>選擇 .nupkg 檔案後直接上傳，無需使用命令列。</p>
+    <div class="upload-form-container" style="margin-bottom: 24px;">
+        <form id="web-upload-form" class="form-inline">
+            <div class="form-group" style="margin-right: 12px;">
+                <label for="nupkg-file" class="sr-only">選擇套件檔案</label>
+                <input type="file" id="nupkg-file" name="package" accept=".nupkg" class="form-control" required />
+            </div>
+            <div class="form-group" style="margin-right: 12px;">
+                <label for="api-key-input" class="sr-only">API Key（若伺服器有設定請填寫）</label>
+                <input type="password" id="api-key-input" name="apiKey" class="form-control" placeholder="API Key（選填）" autocomplete="off" />
+            </div>
+            <button type="submit" id="upload-btn" class="btn btn-primary" disabled>上傳</button>
+        </form>
+        <div id="upload-message" class="alert" role="alert" style="margin-top: 12px; display: none;"></div>
+    </div>
+
+    <h3>命令列上傳</h3>
     <div class="tabbed-info" x-data="{ tabs: tabs, active: tabs[0] }">
         <ul class="nav">
             <template x-for="tab in tabs" :key="tab.name">
@@ -85,4 +103,76 @@
             documentation: "https://docs.microsoft.com/en-us/powershell/module/powershellget/publish-module",
         },
     ];
+
+    // Web 上傳：以 PUT 送出 .nupkg 至發佈 API
+    (function () {
+        var publishUrl = "@Html.Raw(publishUrl)";
+        var form = document.getElementById("web-upload-form");
+        var fileInput = document.getElementById("nupkg-file");
+        var apiKeyInput = document.getElementById("api-key-input");
+        var uploadBtn = document.getElementById("upload-btn");
+        var messageEl = document.getElementById("upload-message");
+
+        function showMessage(text, isError) {
+            messageEl.textContent = text;
+            messageEl.style.display = "block";
+            messageEl.className = "alert " + (isError ? "alert-danger" : "alert-success");
+        }
+
+        function hideMessage() {
+            messageEl.style.display = "none";
+        }
+
+        fileInput.addEventListener("change", function () {
+            uploadBtn.disabled = !fileInput.files || fileInput.files.length === 0;
+            hideMessage();
+        });
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var file = fileInput.files[0];
+            if (!file) {
+                showMessage("請選擇一個 .nupkg 檔案。", true);
+                return;
+            }
+            if (!file.name.toLowerCase().endsWith(".nupkg")) {
+                showMessage("請選擇副檔名為 .nupkg 的套件檔案。", true);
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            hideMessage();
+
+            var headers = {};
+            var apiKey = apiKeyInput && apiKeyInput.value ? apiKeyInput.value.trim() : "";
+            if (apiKey) headers["X-NuGet-ApiKey"] = apiKey;
+
+            fetch(publishUrl, {
+                method: "PUT",
+                headers: headers,
+                body: file
+            })
+            .then(function (res) {
+                if (res.status === 201) {
+                    showMessage("上傳成功。", false);
+                    fileInput.value = "";
+                    uploadBtn.disabled = true;
+                } else if (res.status === 400) {
+                    return res.text().then(function (t) { showMessage("無效的套件格式或請求。", true); });
+                } else if (res.status === 401) {
+                    showMessage("認證失敗，請檢查 API Key。", true);
+                } else if (res.status === 409) {
+                    showMessage("此套件版本已存在。", true);
+                } else {
+                    showMessage("上傳失敗，狀態碼：" + res.status, true);
+                }
+            })
+            .catch(function (err) {
+                showMessage("上傳發生錯誤：" + (err.message || String(err)), true);
+            })
+            .finally(function () {
+                uploadBtn.disabled = false;
+            });
+        });
+    })();
 </script>
