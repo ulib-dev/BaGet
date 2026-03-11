@@ -123,6 +123,23 @@
             messageEl.style.display = "none";
         }
 
+        // 從 .nupkg 檔名解析出 PackageId 與 Version（格式：PackageId.Version.nupkg）
+        function parsePackageIdAndVersion(fileName) {
+            var baseName = fileName.toLowerCase().endsWith(".nupkg")
+                ? fileName.slice(0, -6) : fileName;
+            var match = baseName.match(/((\.\d+)+)(-[^.]+)?$/);
+            if (!match) return null;
+            var versionPart = (match[1] + (match[2] || "")).slice(1);
+            var id = baseName.slice(0, baseName.length - match[0].length);
+            return id && versionPart ? { id: id, version: versionPart } : null;
+        }
+
+        function buildPackagePageUrl(id, version) {
+            var pathBase = window.location.pathname.replace(/\/upload\/?$/i, "") || "/";
+            var base = window.location.origin + (pathBase.endsWith("/") ? pathBase.slice(0, -1) : pathBase);
+            return base + "/packages/" + encodeURIComponent(id) + "/" + encodeURIComponent(version);
+        }
+
         fileInput.addEventListener("change", function () {
             uploadBtn.disabled = !fileInput.files || fileInput.files.length === 0;
             hideMessage();
@@ -154,6 +171,11 @@
             })
             .then(function (res) {
                 if (res.status === 201) {
+                    var parsed = parsePackageIdAndVersion(file.name);
+                    if (parsed) {
+                        window.location.href = buildPackagePageUrl(parsed.id, parsed.version);
+                        return;
+                    }
                     showMessage("上傳成功。", false);
                     fileInput.value = "";
                     uploadBtn.disabled = true;
