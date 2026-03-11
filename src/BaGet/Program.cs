@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using BaGet.Core;
 using BaGet.Web;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.WindowsServices;
 
 namespace BaGet
 {
@@ -14,6 +16,13 @@ namespace BaGet
     {
         public static async Task Main(string[] args)
         {
+            if (OperatingSystem.IsWindows() && WindowsServiceHelpers.IsWindowsService())
+            {
+                var baseDir = AppContext.BaseDirectory;
+                if (!string.IsNullOrEmpty(baseDir) && Directory.Exists(baseDir))
+                    Directory.SetCurrentDirectory(baseDir);
+            }
+
             var host = CreateHostBuilder(args).Build();
             if (!host.ValidateStartupOptions())
             {
@@ -59,6 +68,7 @@ namespace BaGet
         {
             return Host
                 .CreateDefaultBuilder(args)
+                .UseWindowsService()
                 .ConfigureAppConfiguration((ctx, config) =>
                 {
                     var root = Environment.GetEnvironmentVariable("BAGET_CONFIG_ROOT");
