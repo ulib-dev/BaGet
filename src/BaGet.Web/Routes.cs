@@ -7,6 +7,9 @@ namespace BaGet.Web
         public const string UploadSymbolRouteName = "upload-symbol";
         public const string DeleteRouteName = "delete";
         public const string RelistRouteName = "relist";
+        public const string UnlistRouteName = "unlist";
+        public const string UnlistAllRouteName = "unlist-all";
+        public const string RelistAllRouteName = "relist-all";
         public const string SearchRouteName = "search";
         public const string AutocompleteRouteName = "autocomplete";
         public const string DependentsRouteName = "dependents";

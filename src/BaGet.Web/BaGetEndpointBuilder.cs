@@ -36,6 +36,18 @@ namespace BaGet
                 constraints: new { httpMethod = new HttpMethodRouteConstraint("PUT") });
 
             endpoints.MapControllerRoute(
+                name: Routes.UnlistAllRouteName,
+                pattern: "api/v2/package/{id}/unlist-all",
+                defaults: new { controller = "PackagePublish", action = "UnlistAll" },
+                constraints: new { httpMethod = new HttpMethodRouteConstraint("POST") });
+
+            endpoints.MapControllerRoute(
+                name: Routes.RelistAllRouteName,
+                pattern: "api/v2/package/{id}/relist-all",
+                defaults: new { controller = "PackagePublish", action = "RelistAll" },
+                constraints: new { httpMethod = new HttpMethodRouteConstraint("POST") });
+
+            endpoints.MapControllerRoute(
                 name: Routes.DeleteRouteName,
                 pattern: "api/v2/package/{id}/{version}",
                 defaults: new { controller = "PackagePublish", action = "Delete" },
@@ -45,6 +57,12 @@ namespace BaGet
                 name: Routes.RelistRouteName,
                 pattern: "api/v2/package/{id}/{version}",
                 defaults: new { controller = "PackagePublish", action = "Relist" },
+                constraints: new { httpMethod = new HttpMethodRouteConstraint("POST") });
+
+            endpoints.MapControllerRoute(
+                name: Routes.UnlistRouteName,
+                pattern: "api/v2/package/{id}/{version}/unlist",
+                defaults: new { controller = "PackagePublish", action = "Unlist" },
                 constraints: new { httpMethod = new HttpMethodRouteConstraint("POST") });
         }
 

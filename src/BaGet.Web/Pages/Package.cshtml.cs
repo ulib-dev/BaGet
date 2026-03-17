@@ -54,6 +54,8 @@ namespace BaGet.Web
         public IReadOnlyList<DependencyGroupModel> DependencyGroups { get; private set; }
         public IReadOnlyList<VersionModel> Versions { get; private set; }
 
+        public bool AllVersionsListed { get; private set; }
+
         public HtmlString Readme { get; private set; }
 
         public string IconUrl { get; private set; }
@@ -71,10 +73,10 @@ namespace BaGet.Web
                 Package = packages.SingleOrDefault(p => p.Version == requestedVersion);
             }
 
-            // Otherwise try to display the latest version.
             if (Package == null)
             {
-                Package = listedPackages.OrderByDescending(p => p.Version).FirstOrDefault();
+                Package = listedPackages.OrderByDescending(p => p.Version).FirstOrDefault()
+                    ?? packages.OrderByDescending(p => p.Version).FirstOrDefault();
             }
 
             if (Package == null)
@@ -96,7 +98,8 @@ namespace BaGet.Web
 
             UsedBy = dependents.Data;
             DependencyGroups = ToDependencyGroups(Package);
-            Versions = ToVersions(listedPackages, packageVersion);
+            Versions = ToVersions(packages, packageVersion);
+            AllVersionsListed = Versions.All(v => v.Listed);
 
             if (Package.HasReadme)
             {
@@ -188,6 +191,7 @@ namespace BaGet.Web
                     Downloads = p.Downloads,
                     Selected = p.Version == selectedVersion,
                     LastUpdated = p.Published,
+                    Listed = p.Listed,
                 })
                 .OrderByDescending(m => m.Version)
                 .ToList();
@@ -233,6 +237,7 @@ namespace BaGet.Web
             public long Downloads { get; set; }
             public bool Selected { get; set; }
             public DateTime LastUpdated { get; set; }
+            public bool Listed { get; set; }
         }
     }
 }

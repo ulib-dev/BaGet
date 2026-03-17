@@ -164,6 +164,22 @@ else
                 </div>);
             }
 
+            @{ var apiBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.PathBase}/api/v2/package"; }
+            @{ var unlistAllUrl = $"{apiBase}/{Model.Package.Id}/unlist-all"; var relistAllUrl = $"{apiBase}/{Model.Package.Id}/relist-all"; }
+            <div class="package-manage-section" style="margin-bottom: 16px;">
+                <form method="post" id="package-manage-form" class="package-level-form" data-action-url="@(Model.AllVersionsListed ? unlistAllUrl : relistAllUrl)">
+                    <label for="package-api-key">API Key（用於隱藏/顯示整個套件，若伺服器有設定請填寫）:</label>
+                    <input type="password" name="apiKey" id="package-api-key" class="form-control" style="max-width: 280px; display: inline-block; margin-right: 8px;" autocomplete="off" />
+                    @if (Model.AllVersionsListed)
+                    {
+                        <button type="submit" class="btn btn-default">隱藏整個套件</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-default">顯示整個套件</button>
+                    }
+                </form>
+            </div>
             @{ ExpandableSection("Versions", expanded: true,
                 @<div class="version-list" x-data="{ showAll: false }">
                     <table class="table borderless">
@@ -342,4 +358,24 @@ else
             <div x-show="expanded">@template(null)</div>
         </div>
     }
+}
+
+@section Scripts {
+<script>
+(function () {
+    var form = document.getElementById('package-manage-form');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var url = form.getAttribute('data-action-url');
+        if (url) form.action = url;
+        fetch(form.action, { method: 'POST', body: new FormData(form) })
+            .then(function (r) {
+                if (r.ok) location.reload();
+                else alert('操作失敗: ' + r.status);
+            })
+            .catch(function (err) { alert('操作失敗: ' + (err.message || err)); });
+    });
+})();
+</script>
 }

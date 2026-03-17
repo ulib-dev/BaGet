@@ -40,5 +40,10 @@ namespace BaGet.Core
         /// The search query.
         /// </summary>
         public string Query { get; set; }
+
+        /// <summary>
+        /// 是否包含已隱藏（未列出）的套件。預設 false，僅用於管理/顯示隱藏包。
+        /// </summary>
+        public bool IncludeUnlisted { get; set; }
     }
 }

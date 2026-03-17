@@ -135,5 +135,71 @@ namespace BaGet.Web
                 return NotFound();
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Unlist(string id, string version, CancellationToken cancellationToken)
+        {
+            if (_options.Value.IsReadOnlyMode)
+            {
+                return Unauthorized();
+            }
+
+            if (!NuGetVersion.TryParse(version, out var nugetVersion))
+            {
+                return NotFound();
+            }
+
+            if (!await _authentication.AuthenticateAsync(Request.GetApiKey(), cancellationToken))
+            {
+                return Unauthorized();
+            }
+
+            if (await _deleteService.TryDeletePackageAsync(id, nugetVersion, cancellationToken))
+            {
+                return Ok();
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UnlistAll(string id, CancellationToken cancellationToken)
+        {
+            if (_options.Value.IsReadOnlyMode)
+                return Unauthorized();
+            if (!await _authentication.AuthenticateAsync(Request.GetApiKey(), cancellationToken))
+                return Unauthorized();
+
+            var packages = await _packages.FindAsync(id, includeUnlisted: true, cancellationToken);
+            if (packages.Count == 0) return NotFound();
+
+            foreach (var p in packages)
+            {
+                if (p.Listed)
+                    await _deleteService.TryDeletePackageAsync(id, p.Version, cancellationToken);
+            }
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RelistAll(string id, CancellationToken cancellationToken)
+        {
+            if (_options.Value.IsReadOnlyMode)
+                return Unauthorized();
+            if (!await _authentication.AuthenticateAsync(Request.GetApiKey(), cancellationToken))
+                return Unauthorized();
+
+            var packages = await _packages.FindAsync(id, includeUnlisted: true, cancellationToken);
+            if (packages.Count == 0) return NotFound();
+
+            foreach (var p in packages)
+            {
+                if (!p.Listed)
+                    await _packages.RelistPackageAsync(id, p.Version, cancellationToken);
+            }
+            return Ok();
+        }
     }
 }

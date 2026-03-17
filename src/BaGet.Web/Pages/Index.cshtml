@@ -25,6 +25,10 @@
     {
         <input type="hidden" name="prerelease" value="False" />
     }
+    @if (Model.IncludeUnlisted)
+    {
+        <input type="hidden" name="unlisted" value="True" />
+    }
 }
 
 <div class="search-options form-inline">
@@ -85,6 +89,15 @@
             id="prerelease"
             @(Model.Prerelease ? "checked='checked'" : "")
             onclick="window.location.href='@SearchLink(prerelease: !Model.Prerelease, page: 1)'" />
+    </div>
+
+    <div class="form-group form-check">
+        <label for="unlisted">顯示隱藏套件:</label>
+        <input
+            type="checkbox"
+            id="unlisted"
+            @(Model.IncludeUnlisted ? "checked='checked'" : "")
+            onclick="window.location.href='@SearchLink(includeUnlisted: !Model.IncludeUnlisted, page: 1)'" />
     </div>
 </div>
 
@@ -238,18 +251,19 @@ else
         string packageType = null,
         string framework = null,
         bool? prerelease = null,
+        bool? includeUnlisted = null,
         int? page = null)
     {
-        // Use model's value if the argument was skipped.
         packageType = packageType ?? Model.PackageType;
         framework = framework ?? Model.Framework;
         prerelease = prerelease ?? Model.Prerelease;
+        includeUnlisted = includeUnlisted ?? Model.IncludeUnlisted;
         page = page ?? Model.PageIndex;
 
-        // Remove query parameters that have default value
         if (packageType == "any") packageType = null;
         if (framework == "any") framework = null;
-        if (prerelease == true) prerelease = null;
+        if (prerelease == false) prerelease = null;
+        if (includeUnlisted == false) includeUnlisted = null;
         if (page == 1) page = null;
 
         return Url.Page("Index", new
@@ -259,6 +273,7 @@ else
             packageType,
             framework,
             prerelease,
+            unlisted = includeUnlisted,
         });
     }
 }

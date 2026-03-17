@@ -38,7 +38,13 @@ namespace BaGet.Web
 
         public static string GetApiKey(this HttpRequest request)
         {
-            return request.Headers[ApiKeyHeader];
+            var key = request.Headers[ApiKeyHeader];
+            if (!string.IsNullOrEmpty(key)) return key;
+            if (request.HasFormContentType && request.Form.TryGetValue("apiKey", out var formKey) && !string.IsNullOrEmpty(formKey))
+                return formKey;
+            if (request.Query.TryGetValue("apiKey", out var queryKey) && !string.IsNullOrEmpty(queryKey))
+                return queryKey;
+            return null;
         }
     }
 }

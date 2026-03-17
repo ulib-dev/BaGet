@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
@@ -35,7 +35,10 @@ namespace BaGet.Web
         public string Framework { get; set; } = "any";
 
         [BindProperty(SupportsGet = true)]
-        public bool Prerelease { get; set; } = true;
+        public bool Prerelease { get; set; } = false;
+
+        [BindProperty(Name = "unlisted", SupportsGet = true)]
+        public bool IncludeUnlisted { get; set; }
 
         public IReadOnlyList<SearchResult> Packages { get; private set; }
 
@@ -56,6 +59,7 @@ namespace BaGet.Web
                     PackageType = packageType,
                     Framework = framework,
                     Query = Query,
+                    IncludeUnlisted = IncludeUnlisted,
                 },
                 cancellationToken);
 

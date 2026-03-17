@@ -35,7 +35,8 @@ namespace BaGet.Core
                 request.IncludePrerelease,
                 request.IncludeSemVer2,
                 request.PackageType,
-                frameworks);
+                frameworks,
+                includeUnlisted: request.IncludeUnlisted);
 
             var packageIds = search
                 .Select(p => p.Id)
@@ -66,7 +67,8 @@ namespace BaGet.Core
                 request.IncludePrerelease,
                 request.IncludeSemVer2,
                 request.PackageType,
-                frameworks);
+                frameworks,
+                includeUnlisted: request.IncludeUnlisted);
 
             var results = await search.ToListAsync(cancellationToken);
             var groupedResults = results
@@ -162,7 +164,8 @@ namespace BaGet.Core
             bool includePrerelease,
             bool includeSemVer2,
             string packageType,
-            IReadOnlyList<string> frameworks)
+            IReadOnlyList<string> frameworks,
+            bool includeUnlisted = false)
         {
             if (!includePrerelease)
             {
@@ -184,7 +187,12 @@ namespace BaGet.Core
                 query = query.Where(p => p.TargetFrameworks.Any(f => frameworks.Contains(f.Moniker)));
             }
 
-            return query.Where(p => p.Listed);
+            if (!includeUnlisted)
+            {
+                query = query.Where(p => p.Listed);
+            }
+
+            return query;
         }
 
         private IReadOnlyList<string> GetCompatibleFrameworksOrNull(string framework)
